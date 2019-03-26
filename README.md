@@ -42,6 +42,15 @@ hh_dcmp.exe offers four outputs.
 
 MD_z_const.exe accepts edgelist and initial coordinate data as input file.
 
+example
+> init_coord.dat  
+> 1 -1.455  0.687 -0.783  
+> 2 -0.180  0.743  0.691  
+> 3  0.831  0.359  1.212  
+> 4  1.605  0.169 -1.293  
+> 5 -0.387  0.389  1.274  
+
+
 `> MD_z_const.exe edgelist.dat init_coord.dat`
 
 The z coordinate is not updated from the initial value, so using the Helmholtz-Hodge potential as the z coordinate gives results along the network flow structure.
