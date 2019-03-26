@@ -23,8 +23,14 @@ hh_dcmp.exe accepts an input file in edgelist format.
 2 or 3 columns edgelist data are acceptable.
 1st and 2nd colmn are node id (integer) and  3rd colmn is weight of link. The orientation of the link is from the first column to the second column. For two-column data, all weights are set to 1.
 
-> edgelist.dat
-> 1 2 3
+> edgelist.dat  
+> 1 6 1.041  
+> 2 7 0.590  
+> 3 8 0.274  
+> 4 9 0.225  
+> 5 10 0.935
+>
+
 
 `> hh_dcmp.exe edgelist.dat`
 
