@@ -16,9 +16,6 @@ The tool is customized to run MD with the Helmholtz-Hodge potential fixed on the
 - To compile from your shell or cmd command: `g++ hh_dcmp.ccp -I Eigen -o hh_dcmp.exe`
 - You can use the -fopenmp option if you want parallelization.
 
-
-## Instruction
-
 - hh_dcmp.exe accepts an input file in edgelist format.
 2 or 3 columns edgelist data are acceptable.
 1st and 2nd colmn are node id (integer) and  3rd colmn is weight of link. The orientation of the link is from the first column to the second column. For two-column data, all weights are set to 1.
