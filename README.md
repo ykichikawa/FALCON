@@ -65,3 +65,6 @@ After applying MD simulation.
 Visualization of the blog data with bow-tie division colors.
 <img src=blog_bowtie.png width=400>
 
+## Publications based on FALCON
+
+Kichikawa, Y., Iino, T., Iyetomi, H. et al. J Comput Soc Sc (2019). https://doi.org/10.1007/s42001-019-00031-1
