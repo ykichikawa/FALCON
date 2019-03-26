@@ -23,6 +23,9 @@ hh_dcmp.exe accepts an input file in edgelist format.
 2 or 3 columns edgelist data are acceptable.
 1st and 2nd colmn are node id (integer) and  3rd colmn is weight of link. The orientation of the link is from the first column to the second column. For two-column data, all weights are set to 1.
 
+> edgelist.dat
+> ---
+
 `> hh_dcmp.exe edgelist.dat`
 
 hh_dcmp.exe offers four outputs.  
@@ -32,7 +35,9 @@ hh_dcmp.exe offers four outputs.
 - edgelist_potential_flow.dat  
 
 MD_z_const.exe accepts edgelist and initial coordinate data as input file.
+
 `> MD_z_const.exe edgelist.dat init_coord.dat`
+
 The z coordinate is not updated from the initial value, so using the Helmholtz-Hodge potential as the z coordinate gives results along the network flow structure.
 
 ## Examples
