@@ -37,6 +37,7 @@ The z coordinate is not updated from the initial value, so using the Helmholtz-H
 
 ## Examples
 
+<img src=before_color.png width=200>
 ![after](after_color.png)
 ![before](before_color.png)
 
