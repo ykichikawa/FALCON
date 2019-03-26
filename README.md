@@ -37,8 +37,12 @@ The z coordinate is not updated from the initial value, so using the Helmholtz-H
 
 ## Examples
 
-<img src=before_color.png width=400>
 Initial coordinate.
+<img src=before_color.png width=400>
 
-<img src=after_color.png width=400>
 After applying MD simulation.
+<img src=after_color.png width=400>
+
+Visualization of the blog data with bow-tie division colors.
+<img src=blog_bowtie.png width=400>
+
