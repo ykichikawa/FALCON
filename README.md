@@ -35,10 +35,10 @@ The tool is customized to run MD with the Helmholtz-Hodge potential fixed on the
 `> hh_dcmp.exe edgelist.dat`
 
 - hh_dcmp.exe offers four outputs.  
-* edgelist_log.dat  
-* edgelist_loop_flow.dat  
-* edgelist_potential.dat  
-* edgelist_potential_flow.dat  
+    edgelist_log.dat  
+    edgelist_loop_flow.dat  
+    edgelist_potential.dat  
+    edgelist_potential_flow.dat  
 
 - MD_z_const.exe accepts edgelist and initial coordinate data as input file.
 
