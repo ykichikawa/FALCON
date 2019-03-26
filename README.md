@@ -1,7 +1,6 @@
 # FALCON
----
+
 ## Flow Analysis Tools for Large-Scale Complex Networks.
----
 
 FALCON is a tool to analyze the flow structure of a directed network.
 There are two main tools, one to perform Helmholtz-Hodge decomposition for the network.
@@ -11,16 +10,14 @@ The tool is customized to run MD with the Helmholtz-Hodge potential fixed on the
 
 
 ## Usage
----
 
--Download files hh_dcmp.cpp for Helmholtz-Hodge decomposition and MD_z_const.cpp for MD.
--These programs are use the C++ Eigen library.
--To compile from your shell or cmd command: `g++ hh_dcmp.ccp -I Eigen -o hh_dcmp.exe`
--You can use the -fopenmp option if you want parallelization.
+- Download files hh_dcmp.cpp for Helmholtz-Hodge decomposition and MD_z_const.cpp for MD.
+- These programs are use the C++ Eigen library.
+- To compile from your shell or cmd command: `g++ hh_dcmp.ccp -I Eigen -o hh_dcmp.exe`
+- You can use the -fopenmp option if you want parallelization.
 
 
 ## Instruction
----
 
 hh_dcmp.exe accepts an input file in edgelist format.
 2 or 3 columns edgelist data are acceptable.
@@ -29,17 +26,16 @@ hh_dcmp.exe accepts an input file in edgelist format.
 `> hh_dcmp.exe edgelist.dat`
 
 hh_dcmp.exe offers four outputs.  
-    edgelist_log.dat  
-    edgelist_loop_flow.dat  
-    edgelist_potential.dat  
-    edgelist_potential_flow.dat  
+- edgelist_log.dat  
+- edgelist_loop_flow.dat  
+- edgelist_potential.dat  
+- edgelist_potential_flow.dat  
 
 MD_z_const.exe accepts edgelist and initial coordinate data as input file.
 `> MD_z_const.exe edgelist.dat init_coord.dat`
 The z coordinate is not updated from the initial value, so using the Helmholtz-Hodge potential as the z coordinate gives results along the network flow structure.
 
 ## Examples
----
 
 !after_color.png
 !before_color.png
