@@ -17,6 +17,7 @@
 #include <queue>
 #include <random>
 #include <limits>
+#define BUFSIZE 1000000
 using namespace std;
 
 Eigen::MatrixXd readTable(ifstream &stream);
@@ -73,32 +74,13 @@ int main(int argc, char *argv[])
     cout << "Input file error" << endl;
     return 1;
   }
-  //cout << "Input file: " << in.rows() << "x" << in.cols() << endl;
 
   vector<int> unode(in.data(), in.data() + in.rows() * 2);
-  /*unode.reserve(in.rows() * 2);
-  for (j = 0; j < 2; ++j)
-  {
-    for (i = 0, k = in.rows(); i < k; ++i)
-    {
-      unode.push_back(in.coeff(i, j));
-    }
-  }*/
   sort(unode.begin(), unode.end());
   unode.erase(unique(unode.begin(), unode.end()), unode.end());
   vector<int> nodeIndex(unode.begin(), unode.end());
   nodeNum = unode.size();
-  /*
-  for (i = 0, j = 0, nodeNum = 0, temp_d2 = -1, temp_i = unode.size(); i < temp_i; ++i)
-  {
-    if (temp_d2 != unode[i])
-    {
-      temp_d2 = unode[i];
-      nodeIndex.push_back(temp_d2);
-      ++nodeNum;
-    }
-  }
-  */
+
   decltype(nodeIndex)::iterator first = nodeIndex.begin(), last = nodeIndex.end(), it;
   for (j = 0; j < 2; j++)
   {
@@ -135,6 +117,10 @@ int main(int argc, char *argv[])
   bool induced = (wcc_index.array() > 0).any();
   int wccs = wcc_index.maxCoeff();
   cout << "WCC clusters: " << wccs + 1 << endl;
+  if (wccs > 0)
+  {
+    cout << "warning: The Helmholtz-Hodge decomposition applies only to the largest connected component. Potentials other than the largest connected component of the output file are filled with NaN." << endl;
+  }
   std::vector<int> sub_indices;
   for (i = 0; i < wcc_index.size(); i++)
   {
@@ -178,7 +164,6 @@ int main(int argc, char *argv[])
     sub_adj = adj;
   }
   int sub_nodeNum = sub_adj.rows();
-  cout << sub_adj.nonZeros() << ", " << sub_nodeNum << ", " << sub_adj.sum() << endl;
   flow = (sub_adj - Eigen::SparseMatrix<double, Eigen::RowMajor>(sub_adj.transpose())).pruned();
   flow = (flow - Eigen::SparseMatrix<double, Eigen::RowMajor>(flow.diagonal().asDiagonal())).pruned();
 
@@ -195,8 +180,7 @@ int main(int argc, char *argv[])
     b.coeffRef(i) = flow.row(i).sum();
   }
   cout << "HH decompose starts" << endl;
-  solver.setTolerance(0.00000000001);
-  //solver.setMaxIterations(1000);
+  solver.setTolerance(1e-10);
   solver.compute(A);
   if (solver.info() != Eigen::Success)
   {
@@ -209,7 +193,7 @@ int main(int argc, char *argv[])
     cout << "solving failed : " << solver.error() << endl;
     return 1;
   }
-  cout << "Completed" << endl;
+  cout << "Complete" << endl;
   cout << "#iterations: " << solver.iterations() << endl;
   cout << "estimated error: " << solver.error() << endl;
   pot = pot.array() - pot.mean();
@@ -237,9 +221,8 @@ int main(int argc, char *argv[])
   {
     fprintf(fpot, "%d\t%.10f\n", nodeIndex[i], pot_out.coeffRef(i, 1));
   }
-  //fpot_out.precision(10);
-  //fpot_out << fixed << setprecision(10) << pot_out << endl;
-  cout << "output \"" << output_file + pot_outfile << "\"" << endl;
+  //cout << "output \"" << output_file + pot_outfile << "\"" << endl;
+  cout << "output \"" << pot_outfile << "\"" << endl;
 
   B = A.triangularView<Eigen::StrictlyUpper>();
   trip.clear();
@@ -254,19 +237,19 @@ int main(int argc, char *argv[])
       temp_d = -it.value() * (pot.coeff(i) - pot.coeff(it.index()));
       trip.push_back(T(i, it.index(), temp_d));
       trip.push_back(T(it.index(), i, -temp_d));
-      if (temp_d >= 0.0000000001)
+      if (temp_d >= 1e-10)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[i]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 2) = temp_d;
-        j++;
+        ++j;
       }
-      else if (temp_d <= -0.0000000001)
+      else if (temp_d <= -1e-10)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[i]];
         p_out.coeffRef(j, 2) = -temp_d;
-        j++;
+        ++j;
       }
     }
   }
@@ -289,7 +272,8 @@ int main(int argc, char *argv[])
   }
   //fp_out.precision(10);
   //fp_out << fixed << setprecision(10) << p_out << endl;
-  cout << "output \"" << output_file + p_outfile << "\"" << endl;
+  //cout << "output \"" << output_file + p_outfile << "\"" << endl;
+  cout << "output \"" << p_outfile << "\"" << endl;
 
   p_flow.setFromTriplets(trip.begin(), trip.end());
   Eigen::SparseMatrix<double, Eigen::RowMajor> l_flow = flow - p_flow;
@@ -326,7 +310,8 @@ int main(int argc, char *argv[])
   //ofstream fl_out(output_file + l_outfile);
   //fl_out.precision(10);
   //fl_out << fixed << setprecision(10) << l_out << endl;
-  cout << "output \"" << output_file + l_outfile << "\"" << endl;
+  cout << "output \"" << l_outfile << "\"" << endl;
+  //cout << "output \"" << output_file + l_outfile << "\"" << endl;
 
   double gr, lr, bal2eta;
   Eigen::SparseMatrix<double, Eigen::RowMajor> eta(nodeNum, nodeNum);
@@ -347,65 +332,79 @@ int main(int argc, char *argv[])
   of_log << "Input graph: " << nodeNum << " nodes, " << adj.nonZeros() << " links" << endl;
   of_log << "Potential flow ratio: " << fixed << std::setprecision(10) << gr << endl;
   of_log << "Loop flow ratio: " << fixed << std::setprecision(10) << lr << endl;
-  cout << "Output log to \"" << output_file + f_log << "\"" << endl;
+  cout << "output \"" << output_file + f_log << "\"" << endl;
   return 0;
 }
 
-Eigen::MatrixXd readTable(ifstream &stream)
+Eigen::MatrixXd readTable(ifstream &fin)
 {
   ios_base::sync_with_stdio(false);
-  int rows, i, cols;
-  double temp;
-  std::vector<double> vec;
-  string str;
-
-  //getline(stream, str);
-  cols = 0;
-  while (!stream.eof())
+  vector<double> el;
+  el.reserve(1e6);
+  char *buf = new char[BUFSIZE];
+  char temp_c[64];
+  temp_c[63] = '\0';
+  int bi = 0;
+  int ncol = 0;
+  int temp = 0;
+  int flag = 0;
+  while (int gcount = fin.read(buf, BUFSIZE).gcount())
   {
-    stream >> temp;
-    vec.push_back(temp);
-    cols++;
-    if (stream.peek() == '\n')
+    for (int i = 0; i < gcount; ++i)
     {
-      break;
-    }
-  }
-
-  if (cols == 0)
-  {
-    exit(1);
-  }
-
-  //stream.seekg(0, ios_base::beg);
-  i = 0;
-  while (!stream.eof())
-  {
-    stream >> temp;
-    vec.push_back(temp);
-    i++;
-    if (stream.peek() == '\n')
-    {
-      if (i != cols)
+      switch (buf[i])
       {
-        cout << "Input file error" << endl;
-        exit(1);
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '+':
+      case '-':
+      case '.':
+      case 'e':
+      case 'E':
+        temp_c[bi] = buf[i];
+        ++bi;
+        break;
+      case '\n':
+        if (bi != 0)
+        {
+          temp_c[bi] = '\0';
+          el.push_back(atof(temp_c));
+          bi = 0;
+          ++temp;
+        }
+        if (temp != ncol)
+        {
+          if (flag)
+          {
+            cout << "number of cols is not constant: " << el.size() / ncol << "line" << endl;
+            exit(0);
+          }
+          ++flag;
+        }
+        ncol = temp;
+        temp = 0;
+        break;
+      default:
+        if (bi != 0)
+        {
+          temp_c[bi] = '\0';
+          el.push_back(atof(temp_c));
+          bi = 0;
+          ++temp;
+        }
       }
-      i = 0;
     }
   }
-
-  std::vector<double>::iterator it = vec.begin();
-  Eigen::MatrixXd mat((int)(vec.size() / cols), cols);
-  for (i = 0; i < mat.rows(); i++)
-  {
-    for (int j = 0; j < cols; j++)
-    {
-      mat.coeffRef(i, j) = *it;
-      it++;
-    }
-  }
-  return (mat);
+  Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> /**/> m(el.data(), el.size() / ncol, ncol);
+  return m;
 }
 
 Eigen::VectorXi wccDecompose(Eigen::SparseMatrix<double, Eigen::RowMajor> &adj)

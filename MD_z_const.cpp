@@ -119,7 +119,6 @@ int main(int argc, char *argv[])
     int edge_num = edge.cols();
     double range = (r.rowwise().maxCoeff() - r.rowwise().minCoeff()).maxCoeff();
     double kij = kij_init;
-    //  *num_part *sqrt(range) / edge_num;
     double eps_inv = Eps_inv_init * range * range * range / num_part;
     cout << "eps: " << eps_inv << ", k: " << kij << ", numThread: " << num_thread << endl;
     vector<struct Node>
@@ -133,7 +132,6 @@ int main(int argc, char *argv[])
     {
         ppart.push_back(make_pair(0, i));
     }
-    //double kbt = Kbt_init;
     double kbt = range;
     struct Node root, newNode;
     for (auto it = v.data(), end = v.data() + 3 * num_part; it != end; ++it)
@@ -146,12 +144,8 @@ int main(int argc, char *argv[])
     double lim_dt = range / dt / dt / 2;
     double lim_dt2 = lim_dt * lim_dt;
 #pragma omp parallel
-    for (int ite = 0; ite < 200001; ++ite) /////////////////////////main loop ////////////////
+    for (int ite = 0; ite < 60001; ++ite) /////////////////////////main loop ////////////////
     {
-        /*#pragma omp single nowait
-        {
-            cout << "                                      \rite: " << ite << flush;
-        }*/
 #pragma omp sections nowait
         {
 #pragma omp section //initialize
@@ -253,15 +247,15 @@ int main(int argc, char *argv[])
                     double v2sum = v.colwise().squaredNorm().mean() / 2;
 #pragma omp critical(cout)
                     {
-                        cout << "ite: " << ite << ", vmean*dt: " << sqrt(v2sum) * dt << ", dRMS: " << F.colwise().squaredNorm().mean() << ", D: " << (r - r0).colwise().squaredNorm().sum() << endl;
+                        cout << "ite: " << ite << ", deltaD: " << (r - r0).colwise().squaredNorm().sum() << endl;
                         r0 = r;
                     }
                 }
             }
         }
 
-#pragma omp for num_threads(num_thread - 1) reduction(matplus0 \
-                                                      : F_k) nowait //elasitc force
+#pragma omp for schedule(dynamic, edge_num / num_thread / 2) reduction(matplus0 \
+                                                                       : F_k) nowait //elasitc force
         for (int i = 0; i < edge_num; ++i)
         {
             int orig = edge.coeff(0, i);
@@ -356,8 +350,13 @@ int main(int argc, char *argv[])
                 Eigen::MatrixXd co_res(num_part, 4);
                 co_res.col(0) = id;
                 co_res.block(0, 1, num_part, 3) = r.transpose();
-                ofstream fout("ss" + to_string(ite) + ".dat");
-                fout << co_res;
+                //ofstream fout("ss" + to_string(ite) + ".dat");
+                FILE *fout = fopen(("ss" + to_string(ite) + ".dat").c_str(), "w");
+                for (int i = 0; i < num_part; ++i)
+                {
+                    fprintf(fout, "%d %.6f %.6f %.6f\n", (int)co_res.coeff(i, 0), co_res.coeff(i, 1), co_res.coeff(i, 2), co_res.coeff(i, 3));
+                }
+                //fout << co_res;
             }
         }
     }
