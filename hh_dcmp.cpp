@@ -34,11 +34,16 @@ int main(int argc, char *argv[])
   typedef Eigen::Triplet<double> T;
   vector<T> trip;
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double, Eigen::RowMajor>, Eigen::DiagonalPreconditioner<double> /**/> solver;
+  double tol = 1e-10;
+  if (argc >= 3)
+  {
+    tol = stof("1e-" + string(argv[2]));
+  }
 
   std::numeric_limits<double>::quiet_NaN();
   std::mt19937 mt((int)time(NULL));
   Eigen::initParallel();
-  cout << "NbThreads = " << Eigen::nbThreads() << endl;
+  cout << "NbThreads = " << Eigen::nbThreads() << ", tol: " << tol << endl;
 
   if (argc < 2)
   {
@@ -54,7 +59,6 @@ int main(int argc, char *argv[])
     return 1;
   }
   in = readTable(fin);
-
   std::size_t found = input_file.rfind(".");
   input_file.erase(found, input_file.length() - found);
   string output_file;
@@ -93,13 +97,15 @@ int main(int argc, char *argv[])
 
   cout << "Input file \"" << argv[1] << "\" [" << in.rows() << "x" << in.cols() << "]" << endl;
   cout << "Input graph: " << nodeNum << "nodes, " << in.rows() << " links" << endl;
+  vector<int> rind(in.rows());
+  for (i = 0, j = rind.size(); i < j; ++i)
+  {
+    rind[i] = i;
+  }
 
   if (in.cols() >= 3)
   {
-    for (i = 0, k = in.rows(); i < k; i++)
-    {
-      trip.push_back(T(in(i, 0), in(i, 1), in(i, 2)));
-    }
+    trip.push_back(T(in(i, 0), in(i, 1), in(i, 2)));
   }
   else if (in.cols() == 2)
   {
@@ -117,10 +123,10 @@ int main(int argc, char *argv[])
   bool induced = (wcc_index.array() > 0).any();
   int wccs = wcc_index.maxCoeff();
   cout << "WCC clusters: " << wccs + 1 << endl;
-  if (wccs > 0)
+  /*if (wccs > 0)
   {
     cout << "warning: The Helmholtz-Hodge decomposition applies only to the largest connected component. Potentials other than the largest connected component of the output file are filled with NaN." << endl;
-  }
+  }*/
   std::vector<int> sub_indices;
   for (i = 0; i < wcc_index.size(); i++)
   {
@@ -164,8 +170,8 @@ int main(int argc, char *argv[])
     sub_adj = adj;
   }
   int sub_nodeNum = sub_adj.rows();
-  flow = (sub_adj - Eigen::SparseMatrix<double, Eigen::RowMajor>(sub_adj.transpose())).pruned();
-  flow = (flow - Eigen::SparseMatrix<double, Eigen::RowMajor>(flow.diagonal().asDiagonal())).pruned();
+  flow = (sub_adj - Eigen::SparseMatrix<double, Eigen::RowMajor>(sub_adj.transpose()));
+  flow = (flow - Eigen::SparseMatrix<double, Eigen::RowMajor>(flow.diagonal().asDiagonal()));
 
   A = -sub_adj.cwiseAbs() - Eigen::SparseMatrix<double, Eigen::RowMajor>(sub_adj.transpose().cwiseAbs());
   Eigen::VectorXd A_rowWise_sum(A.rows());
@@ -180,7 +186,7 @@ int main(int argc, char *argv[])
     b.coeffRef(i) = flow.row(i).sum();
   }
   cout << "HH decompose starts" << endl;
-  solver.setTolerance(1e-10);
+  solver.setTolerance(tol);
   solver.compute(A);
   if (solver.info() != Eigen::Success)
   {
@@ -221,9 +227,9 @@ int main(int argc, char *argv[])
   {
     fprintf(fpot, "%d\t%.10f\n", nodeIndex[i], pot_out.coeffRef(i, 1));
   }
+  fclose(fpot);
   //cout << "output \"" << output_file + pot_outfile << "\"" << endl;
   cout << "output \"" << pot_outfile << "\"" << endl;
-
   B = A.triangularView<Eigen::StrictlyUpper>();
   trip.clear();
   trip.reserve(B.nonZeros() * 2);
@@ -237,14 +243,14 @@ int main(int argc, char *argv[])
       temp_d = -it.value() * (pot.coeff(i) - pot.coeff(it.index()));
       trip.push_back(T(i, it.index(), temp_d));
       trip.push_back(T(it.index(), i, -temp_d));
-      if (temp_d >= 1e-10)
+      if (temp_d > 1e-10)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[i]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 2) = temp_d;
         ++j;
       }
-      else if (temp_d <= -1e-10)
+      else if (temp_d < -1e-10)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[i]];
@@ -276,12 +282,13 @@ int main(int argc, char *argv[])
   cout << "output \"" << p_outfile << "\"" << endl;
 
   p_flow.setFromTriplets(trip.begin(), trip.end());
-  Eigen::SparseMatrix<double, Eigen::RowMajor> l_flow = flow - p_flow;
+  Eigen::SparseMatrix<double, Eigen::RowMajor>
+      l_flow = (flow - p_flow).pruned(-10);
   for (i = j = 0; i < sub_nodeNum; i++)
   {
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(l_flow, i); it; ++it)
     {
-      if (it.value() >= 0.0000000001)
+      if (it.value() > 0)
       {
         l_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[i]];
         l_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[it.index()]];
@@ -401,6 +408,22 @@ Eigen::MatrixXd readTable(ifstream &fin)
           ++temp;
         }
       }
+    }
+  }
+  if (bi != 0)
+  {
+    temp_c[bi] = '\0';
+    el.push_back(atof(temp_c));
+    bi = 0;
+    ++temp;
+    if (temp != ncol)
+    {
+      if (flag)
+      {
+        cout << "number of cols is not constant: " << el.size() / ncol << "line" << endl;
+        exit(0);
+      }
+      ++flag;
     }
   }
   Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> /**/> m(el.data(), el.size() / ncol, ncol);
