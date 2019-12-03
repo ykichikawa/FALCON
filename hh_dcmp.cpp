@@ -35,9 +35,10 @@ int main(int argc, char *argv[])
   vector<T> trip;
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double, Eigen::RowMajor>, Eigen::DiagonalPreconditioner<double> /**/> solver;
   double tol = 1e-10;
+
   if (argc >= 3)
   {
-    tol = stof("1e-" + string(argv[2]));
+    tol = pow(10, stof(string(argv[2])));
   }
 
   std::numeric_limits<double>::quiet_NaN();
@@ -62,16 +63,16 @@ int main(int argc, char *argv[])
   std::size_t found = input_file.rfind(".");
   input_file.erase(found, input_file.length() - found);
   string output_file;
-  if (argc > 2)
+  /*if (argc > 2)
   {
     output_file = argv[2];
     found = output_file.rfind(".");
     output_file.erase(found, output_file.length() - found);
   }
   else
-  {
-    output_file = input_file;
-  }
+  {*/
+  output_file = input_file;
+  //}
 
   if (in.rows() == 0 | in.cols() < 2)
   {
@@ -97,15 +98,18 @@ int main(int argc, char *argv[])
 
   cout << "Input file \"" << argv[1] << "\" [" << in.rows() << "x" << in.cols() << "]" << endl;
   cout << "Input graph: " << nodeNum << "nodes, " << in.rows() << " links" << endl;
-  vector<int> rind(in.rows());
+  /*vector<int> rind(in.rows());
   for (i = 0, j = rind.size(); i < j; ++i)
   {
     rind[i] = i;
   }
-
+*/
   if (in.cols() >= 3)
   {
-    trip.push_back(T(in(i, 0), in(i, 1), in(i, 2)));
+    for (i = 0, k = in.rows(); i < k; i++)
+    {
+      trip.push_back(T(in(i, 0), in(i, 1), in(i, 2)));
+    }
   }
   else if (in.cols() == 2)
   {
@@ -243,14 +247,14 @@ int main(int argc, char *argv[])
       temp_d = -it.value() * (pot.coeff(i) - pot.coeff(it.index()));
       trip.push_back(T(i, it.index(), temp_d));
       trip.push_back(T(it.index(), i, -temp_d));
-      if (temp_d > 1e-10)
+      if (temp_d > 0)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[i]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 2) = temp_d;
         ++j;
       }
-      else if (temp_d < -1e-10)
+      else if (temp_d < 0)
       {
         p_out.coeffRef(j, 0) = (double)nodeIndex[sub_indices[it.index()]];
         p_out.coeffRef(j, 1) = (double)nodeIndex[sub_indices[i]];
