@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
   if (argc >= 3)
   {
-    tol = pow(10, stof(string(argv[2])));
+    tol = pow(10, atof(argv[2]));
   }
 
   std::numeric_limits<double>::quiet_NaN();
