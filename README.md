@@ -64,5 +64,5 @@ Visualization of the blog data with bow-tie division colors.
 
 ## Publications based on FALCON
 
-Kichikawa, Y., Iino, T., Iyetomi, H. et al. J Comput Soc Sc (2019). https://doi.org/10.1007/s42001-019-00031-1
+Kichikawa, Y., Iino, T., Iyetomi, H. et al. J Comput Soc Sc (2019). https://doi.org/10.1007/s42001-019-00031-1 \\
 Kichikawa, Y., Iyetomi, H., Iino, T. et al. Community structure based on circular flow in a large-scale transaction network. Appl Netw Sci 4, 92 (2019). https://doi.org/10.1007/s41109-019-0202-8
