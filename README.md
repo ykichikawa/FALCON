@@ -66,3 +66,6 @@ Visualization of the blog data with bow-tie division colors.
 
 Kichikawa, Y., Iino, T., Iyetomi, H. et al. J Comput Soc Sc (2019). https://doi.org/10.1007/s42001-019-00031-1  
 Kichikawa, Y., Iyetomi, H., Iino, T. et al. Community structure based on circular flow in a large-scale transaction network. Appl Netw Sci 4, 92 (2019). https://doi.org/10.1007/s41109-019-0202-8
+KICHIKAWA, Yuichi; IYETOMI, Hiroshi; IKEDA, Yuichi. Who Possesses Whom in Terms of the Global Ownership Network. In: Big Data Analysis on Global Community Formation and Isolation: Sustainability and Flow of Commodities, Money, and Humans. Singapore: Springer Singapore, 2021. p. 143-190.
+https://doi.org/10.1007/978-981-15-4944-1_6
+
